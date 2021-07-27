@@ -92,11 +92,53 @@ public class OrderRepository {
     }//단점: 유지보수가 어렵다
 
     //Querydsl로 처리
+
+    public List<Order> findAllWithMemberDelivery() {
+     return em.createQuery(
+             "select o from Order o" +
+                     "join fetch o.member m" +
+                     "join fetch o.delivery d", Order.class
+     ).getResultList();
+    }
+
+    public List<OrderSimpleQueryDto> findOrderDtos() {
+        return em.createQuery(
+                "select new jpabook.jpashop.repository.OrderSimpleQueryDto(o.id, m.name, o.orderDate, o.status, d.address)" +
+                        "from Order o" +
+                        "join o.member m" +
+                        "join o.delivery d", OrderSimpleQueryDto.class)
+                .getResultList();
+
+    }
+
+    public List<Order> findAllWithItem() {
+        return em.createQuery(
+                "select o from Order o" +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d" +
+                        " join fetch o.orderItems oi" +
+                        " join fetch oi.item i", Order.class)
+                .setFirstResult(1)
+                .setMaxResults(100)
+                .getResultList();
+
+    }
+
+    public List<Order> findAllWithMemberDelivery(int offset, int limit) {
+        return em.createQuery(
+                "select o from Order o" +
+                        "join fetch o.member m" +
+                        "join fetch o.delivery d", Order.class)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+    }
+
     /*
-    public List<Order> findAll(OrderSearch orderSearch) {
+    * public List<Order> findAll(OrderSearch orderSearch) {
         QOrder order = QOrder.order;
         QMember member = QMember.member;
-
         return query
                 .select(order)
                 .from(order)
@@ -106,10 +148,17 @@ public class OrderRepository {
                 .limit(1000)
                 .fetch();
     }
+    private BooleanExpression statusEq(OrderStatus statusCond) {
+        if (statusCond == null) {
+            return null;
+        } return order.status.eq(statusCond);
+    }
+    private BooleanExpression nameLike(String nameCond) {
+        if (!StringUtils.hasText(nameCond)) {
+            return null;
+        }
+        return member.name.like(nameCond); }
     * */
-
-
-}
 
 /*
 *         return em.createQuery("select o from Order o join o.member m" +
